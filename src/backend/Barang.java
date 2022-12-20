@@ -145,11 +145,11 @@ public class Barang {
         }
         else {
             String query = "UPDATE barang SET "
-                    + "namaBarang = '" + this.nama + "', "
-                    + "kategoriBarang = '" + this.kategori + "', "
-                    + "hargaBarang = " + this.harga + " "
-                    + "stokBarang = " + this.stok + " "
-                    + "WHERE idPegawai = '" +this.idBarang + "'";
+                    + " namaBarang = '" + this.nama + "', "
+                    + " kategoriBarang = '" + this.kategori + "', "
+                    + " hargaBarang = " + this.harga + ", "
+                    + " stokBarang = " + this.stok + " "
+                    + " WHERE idBarang = '" +this.idBarang + "'";
             
             Koneksi.executeQuery(query);
         }
@@ -158,5 +158,9 @@ public class Barang {
     public void delete(){
         String query = "DELETE FROM barang WHERE idBarang = '"+this.idBarang+"'";
         Koneksi.executeQuery(query);
+    }
+    
+    public String toString(){
+        return nama;
     }
 }

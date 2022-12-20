@@ -3,15 +3,14 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package backend;
-
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.ArrayList;
 
 /**
  *
  * @author WINDOWS 10
  */
-class BarangOrder {
+public class BarangOrder {
     private int idBarangOrder;
     private Barang barang;
     private int qtyBarang;
@@ -69,13 +68,30 @@ class BarangOrder {
         this.penjualan = penjualan;
     }
     
+    public boolean validasi(int idBarang){
+        int stok=0;
+        boolean status = false;
+        ResultSet rs = Koneksi.selectQuery("SELECT * FROM Barang WHERE idBarang = " + idBarang);
+        try {
+            while (rs.next()) {
+                stok = rs.getInt("stokBarang");
+                if ((stok>=qtyBarang) && (stok!=0) && (qtyBarang!=0)) {
+                    status = true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return status;
+    }
+      
     public static BarangOrder getByid(int id){
         BarangOrder bo = null;
-        String query = ("SELECT BarangOrder.*, Barang.namaBarang ,Barang.kategoriBarang, Barang.hargaBarang, Barang.stokBarang, Penjualan.tglPenjualan, Penjualan.totalHargaPenjualan")
+        String query = ("SELECT BarangOrder.*, Barang.namaBarang ,Barang.kategoriBarang, Barang.hargaBarang, Barang.stokBarang, Penjualan.tglPenjualan, Penjualan.totalHargaPenjualan, penjualan.idPegawai, penjualan.namaPegawai, penjualan.emailPegawai, penjualan.noTelpPegawai")
                                             + " FROM BarangOrder"
-                                            + " LEFT JOIN Penjualan ON BarangOrder.idPenjualan = Penjualan.Penjualan"
+                                            + " LEFT JOIN (SELECT penjualan.*, pegawai.namaPegawai, pegawai.emailPegawai, pegawai.noTelpPegawai FROM penjualan JOIN pegawai ON  penjualan.idPegawai = pegawai.idPegawai) AS Penjualan ON BarangOrder.idPenjualan = Penjualan.idPenjualan"
                                             + " RIGHT JOIN Barang ON BarangOrder.idBarang = Barang.idBarang"
-                                            + " WHERE idBarangOrder = " + id;
+                                            + " WHERE BarangOrder.idBarangOrder = " + id;
             ResultSet rs = Koneksi.selectQuery(query);
         try{
             while(rs.next()){
@@ -96,7 +112,7 @@ class BarangOrder {
                 pjl.setIdPenjualan(rs.getInt("idPenjualan"));
                 pjl.setPegawai(pegawai);
                 pjl.setTglPenjualan(rs.getString("tglPenjualan"));
-                pjl.setTotalHargaPenjualan(rs.getInt("totalHargaBarang"));
+                pjl.setTotalHargaPenjualan(rs.getInt("totalHargaPenjualan"));
                 
                 bo = new BarangOrder();
                 bo.setIdBarangOrder(rs.getInt("idBarangOrder"));
@@ -110,6 +126,53 @@ class BarangOrder {
             e.printStackTrace();
         }
         return bo;
+    }
+    
+    public static ArrayList<BarangOrder> getByIdPenjualan(int id){
+        ArrayList<BarangOrder> listBarangOrder = new ArrayList();
+        String query = ("SELECT BarangOrder.*, Barang.namaBarang ,Barang.kategoriBarang, Barang.hargaBarang, Barang.stokBarang, Penjualan.tglPenjualan, Penjualan.totalHargaPenjualan, penjualan.idPegawai, penjualan.namaPegawai, penjualan.emailPegawai, penjualan.noTelpPegawai")
+                                            + " FROM BarangOrder"
+                                            + " LEFT JOIN (SELECT penjualan.*, pegawai.namaPegawai, pegawai.emailPegawai, pegawai.noTelpPegawai FROM penjualan JOIN pegawai ON  penjualan.idPegawai = pegawai.idPegawai) AS Penjualan ON BarangOrder.idPenjualan = Penjualan.idPenjualan"
+                                            + " RIGHT JOIN Barang ON BarangOrder.idBarang = Barang.idBarang"
+                                            + " WHERE BarangOrder.idPenjualan = " + id;
+        ResultSet rs = Koneksi.selectQuery(query);
+        
+        try{
+            while(rs.next()){
+                Barang barang = new Barang();
+                barang.setIdBarang(rs.getInt("idBarang"));
+                barang.setNama(rs.getString("namaBarang"));
+                barang.setKategori(rs.getString("kategoriBarang"));
+                barang.setHarga(rs.getInt("hargaBarang"));
+                barang.setStok(rs.getInt("stokBarang"));
+                
+                Pegawai pegawai = new Pegawai();
+                pegawai.setIdPegawai(rs.getInt("idPegawai"));
+                pegawai.setNama(rs.getString("namaPegawai"));
+                pegawai.setEmail(rs.getString("emailPegawai"));
+                pegawai.setNoTelp(rs.getString("noTelpPegawai"));
+                
+                Penjualan pjl = new Penjualan();
+                pjl.setIdPenjualan(rs.getInt("idPenjualan"));
+                pjl.setPegawai(pegawai);
+                pjl.setTglPenjualan(rs.getString("tglPenjualan"));
+                pjl.setTotalHargaPenjualan(rs.getInt("totalHargaPenjualan"));
+                
+                BarangOrder bo = new BarangOrder();
+                bo.setIdBarangOrder(rs.getInt("idBarangOrder"));
+                bo.setBarang(barang);
+                bo.setPenjualan(pjl);
+                bo.setQtyBarang(rs.getInt("qtyBarang"));
+                bo.setHargaBarang(rs.getInt("hargaBarang"));
+                
+                listBarangOrder.add(bo);   
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        
+        return listBarangOrder;
     }
     
     public static ArrayList<BarangOrder> getAll(){
@@ -161,11 +224,15 @@ class BarangOrder {
     }
     
     public void save(){
+        Barang dataBarang = Barang.getById(this.barang.getIdBarang());
+        dataBarang.setStok(dataBarang.getStok()-qtyBarang);
+        dataBarang.save();
+        
         if(this.idBarangOrder == 0){
             String query =  "INSERT INTO BarangOrder (idBarang, idPenjualan, qtyBarang, hargaBarang) VALUES ("
                     + " '" + this.barang.getIdBarang() + "', "
-                    + " '" + this.penjualan.getIdPenjualan() + "') "
-                    + " '" + this.qtyBarang + "') "
+                    + " '" + this.penjualan.getIdPenjualan() + "', "
+                    + " '" + this.qtyBarang + "', "
                     + " '" + this.hargaBarang + "') ";
             
             this.idBarangOrder = Koneksi.insertQueryGetId(query);
@@ -173,8 +240,8 @@ class BarangOrder {
         else{
             String query = "UPDATE BarangOrder SET "
                     + " idBarang = '" + this.barang.getIdBarang() + "', "
-                    + " idPenjualan = '" + this.penjualan.getIdPenjualan() + "' "
-                    + " qtyBarang = '" + this.qtyBarang + "' "
+                    + " idPenjualan = '" + this.penjualan.getIdPenjualan() + "', "
+                    + " qtyBarang = '" + this.qtyBarang + "', "
                     + " hargaBarang = '" + this.hargaBarang + "' "
                     + " WHERE idBarangOrder = '" + this.idBarangOrder + "'";
             
@@ -183,7 +250,7 @@ class BarangOrder {
     }
     
     public void delete(){
-        String sql = "DELETE FROM kategori WHERE idBarangOrder = '" +this.idBarangOrder +"'";
+        String sql = "DELETE FROM barangorder WHERE idBarangOrder = '" +this.idBarangOrder +"'";
         Koneksi.executeQuery(sql);
     }
 }

@@ -15,15 +15,21 @@ public class Penjualan {
         private Pegawai pegawai;
         private String tglPenjualan;
         private int totalHargaPenjualan;
+        private static ArrayList<BarangOrder> listBarang = new ArrayList();
     
     public Penjualan(){
         
     }
     
-    public Penjualan(String tglPenjualan, Pegawai pegawai, int totalHargaPenjualan){
+    public void printBarang(){
+        for (BarangOrder barangOrder : listBarang) {
+            System.out.println("nama barang : " + barangOrder.getBarang().getNama());
+        }
+    }
+    
+    public Penjualan(String tglPenjualan, Pegawai pegawai){
         this.tglPenjualan=tglPenjualan;
         this.pegawai=pegawai;
-        this.totalHargaPenjualan=totalHargaPenjualan;
     }
     
     public int getIdPenjualan() {
@@ -57,6 +63,34 @@ public class Penjualan {
     public void setTotalHargaPenjualan(int totalHargaPenjualan) {
         this.totalHargaPenjualan = totalHargaPenjualan;
     }
+
+    public ArrayList<BarangOrder> getListBarang() {
+        return listBarang;
+    }
+
+    public void setListBarang(ArrayList<BarangOrder> listBarang) {
+        this.listBarang = listBarang;
+    }
+    
+    public void tambahBarang(BarangOrder barang){
+        listBarang.add(barang);
+    }
+    
+    public void resetBarang(){
+        listBarang.clear();
+    }
+    
+    public void hapusBarang(int index){
+        listBarang.remove(index);
+    }
+    
+    public void total(){
+        int total=0;
+        for (BarangOrder barangOrder : listBarang) {
+            total += (barangOrder.getQtyBarang() * barangOrder.getHargaBarang());
+        }
+        totalHargaPenjualan = total;
+    }
     
     public static Penjualan getByid(int id){
         Penjualan pjl = null;
@@ -65,7 +99,7 @@ public class Penjualan {
                                             + " LEFT JOIN Pegawai ON Penjualan.idPegawai = Pegawai.idPegawai"
                                             + " WHERE idPenjualan = " + id;
             
-            ResultSet rs = Koneksi.selectQuery(query);
+        ResultSet rs = Koneksi.selectQuery(query);
         try{
             while(rs.next()){
                 Pegawai pegawai = new Pegawai();
@@ -78,7 +112,7 @@ public class Penjualan {
                 pjl.setIdPenjualan(rs.getInt("idPenjualan"));
                 pjl.setPegawai(pegawai);
                 pjl.setTglPenjualan(rs.getString("tglPenjualan"));
-                pjl.setTotalHargaPenjualan(rs.getInt("totalHargaBarang"));
+                pjl.setTotalHargaPenjualan(rs.getInt("totalHargaPenjualan"));
             }
         }
         catch (Exception e){
@@ -108,7 +142,7 @@ public class Penjualan {
                 pjl.setIdPenjualan(rs.getInt("idPenjualan"));
                 pjl.setPegawai(pegawai);
                 pjl.setTglPenjualan(rs.getString("tglPenjualan"));
-                pjl.setTotalHargaPenjualan(rs.getInt("totalHargaBarang"));
+                pjl.setTotalHargaPenjualan(rs.getInt("totalHargaPenjualan"));
                 
                 listPenjualan.add(pjl);   
             }

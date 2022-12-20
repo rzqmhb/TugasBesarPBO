@@ -64,6 +64,27 @@ public class Pegawai {
         this.password = password;
     }
     
+    public boolean validasi(int id, String password){
+        Pegawai pegawai = null;
+        ResultSet rs = Koneksi.selectQuery("SELECT * FROM pegawai");
+        boolean status = false;
+        
+        try {
+            while(rs.next()){
+                pegawai = new Pegawai();
+                pegawai.setIdPegawai(rs.getInt("idPegawai"));
+                pegawai.setPassword(rs.getString("passwordPegawai"));
+                if ((id==pegawai.idPegawai) && (password.equals(pegawai.password))) {
+                    status = true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return status;
+    }
+    
     public static Pegawai getById(int id){
         Pegawai pegawai = null;
         ResultSet rs = Koneksi.selectQuery("SELECT * FROM pegawai "
@@ -143,11 +164,11 @@ public class Pegawai {
         }
         else {
             String query = "UPDATE pegawai SET "
-                    + "namaPegawai = '" + this.nama + "', "
-                    + "emailPegawai = '" + this.email + "', "
-                    + "noTelpPegawai = '" + this.noTelp + "' "
-                    + "passwordPegawai = '" + this.password + "' "
-                    + "WHERE idPegawai = '" +this.idPegawai + "'";
+                    + " namaPegawai = '" + this.nama + "', "
+                    + " emailPegawai = '" + this.email + "', "
+                    + " noTelpPegawai = '" + this.noTelp + "', "
+                    + " passwordPegawai = '" + this.password + "' "
+                    + " WHERE idPegawai = '" +this.idPegawai + "'";
             
             Koneksi.executeQuery(query);
         }
@@ -156,5 +177,9 @@ public class Pegawai {
     public void delete(){
         String query = "DELETE FROM pegawai WHERE idPegawai = '"+this.idPegawai+"'";
         Koneksi.executeQuery(query);
+    }
+    
+    public String toString(){
+        return nama;
     }
 }
